@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use File;
 use Gate;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\Middleware;
 
 class LogController extends Controller
 {
@@ -15,8 +16,15 @@ class LogController extends Controller
         $view_permission = config('laravel-logs.view_permission');
         $clear_permission =  config('laravel-logs.clear_permission');
 
-        $this->middleware("can:$view_permission", ['only' => ['index']]);
-        $this->middleware("can:$clear_permission", ['only' => ['destroy']]);
+        if (version_compare(app()->version(), '12.0', '>=')) {
+            $this->middleware("can:$view_permission")->only(['index']);
+            $this->middleware("can:$clear_permission")->only(['destroy']);
+        }else{
+            return [
+                new Middleware("can:$view_permission", only: ['index']),
+                new Middleware("can:$clear_permission", only: ['destroy']),
+            ];
+        }
     }
 
     /**
